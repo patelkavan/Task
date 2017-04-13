@@ -9,11 +9,12 @@ from django.shortcuts import redirect
 from rest_framework import generics
 
 class SpotList(APIView): #shows all available spots
-    def get(self, request, lng=None, lat=None, r=None, format=None):
+    def get(self, request, format=None):
         print(request.data)
         spots = Spots.objects.filter(occupied=False)
         serializer = SpotsSerializer(spots, many=True)
         return Response(serializer.data)
+
 
 class ParkedList(APIView): #lists the parked values
     def get(self, request, format=None):
@@ -43,3 +44,21 @@ class ReserveIT(APIView): #changes the value of the occupied field or pass
             spots.save()
             return True
         return False
+
+
+# http://127.0.0.1:8000/spots/lng=21&lat=19&radius=2
+class SpotLngLat(APIView):
+
+    def get(self, request, lng, lat, radius, format=None):
+        lng, lat, radius = map(int,[lng, lat, radius])
+        print(lat, lng,radius)
+        spots = Spots.objects.all()
+        serializer = SpotsSerializer(spots, many=True)
+        spotlist = []
+        for spot in serializer.data:
+            spotlng, spotlat = map(float,[spot["lng"],spot["lat"]])
+            print(spotlng,spotlat)
+            if spotlng in range(lng-radius, lng+radius) and spotlat in range(lat-radius, lat+radius):
+                print(spot)
+                spotlist.append(spot)
+        return Response(spotlist)
